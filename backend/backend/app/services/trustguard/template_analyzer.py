@@ -38,7 +38,7 @@ def analyze_template_similarity(document_text: str) -> Dict[str, Any]:
             highest_score = score
             best_template = t_name
             
-    similarity = max(65.0, round(highest_score if highest_score > 0 else 75.0, 1))
+    similarity = round(highest_score if highest_score > 0 else 25.0, 1)
     
     # Identify unexpected/abnormal clauses for contract type
     unexpected_clauses = []
@@ -50,7 +50,7 @@ def analyze_template_similarity(document_text: str) -> Dict[str, Any]:
         unexpected_clauses.append("IP Ownership Transfer in Residential Lease")
         
     return {
-        "template_type": best_template,
+        "template_type": best_template if highest_score > 0 else "Unstructured / Custom Document",
         "template_similarity": similarity,
         "unexpected_clauses_count": len(unexpected_clauses),
         "unexpected_clauses": unexpected_clauses

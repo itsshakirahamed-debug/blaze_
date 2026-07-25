@@ -33,29 +33,33 @@ const VERDICT_THEMES = {
   }
 };
 
-function getTheme(verdictText = '') {
-  const text = verdictText.toLowerCase();
-  if (text.includes('safe to sign') && !text.includes('review') && !text.includes('but')) {
+function getTheme(verdictText = '', overallRisk = 'Low') {
+  const text = (verdictText || '').toLowerCase();
+  const risk = (overallRisk || '').toLowerCase();
+
+  if (text.includes('do not sign') || text.includes('avoid') || risk === 'high') {
     return {
-      title: verdictText.replace('✅ ', ''),
-      theme: VERDICT_THEMES.emerald
-    };
-  }
-  if (text.includes('do not sign') || text.includes('avoid')) {
-    return {
-      title: verdictText.replace('❌ ', ''),
+      title: verdictText ? verdictText.replace('❌ ', '') : 'Do Not Sign Without Legal Review',
       theme: VERDICT_THEMES.rose
     };
   }
+  if (text.includes('safe to sign') && !text.includes('review') && !text.includes('but') && risk === 'low') {
+    return {
+      title: verdictText ? verdictText.replace('✅ ', '') : 'Safe to Sign',
+      theme: VERDICT_THEMES.emerald
+    };
+  }
   return {
-    title: verdictText.replace('⚠️ ', ''),
+    title: verdictText ? verdictText.replace('⚠️ ', '') : 'Review Carefully Before Signing',
     theme: VERDICT_THEMES.amber
   };
 }
 
 function computeConfidence(trustScore, scamProbability) {
-  const raw = trustScore * 0.7 + (100 - scamProbability) * 0.3;
-  return Math.min(99, Math.max(60, Math.round(raw)));
+  const t = Number(trustScore) || 50;
+  const s = Number(scamProbability) || 20;
+  const raw = t * 0.7 + (100 - s) * 0.3;
+  return Math.min(99, Math.max(40, Math.round(raw)));
 }
 
 function RiskMeter({ position, color }) {
@@ -88,14 +92,14 @@ function RiskMeter({ position, color }) {
 }
 
 export default function AIRecommendationCard({
-  trustScore = 86,
-  scamProbability = 11,
-  overallRisk = 'Medium',
-  recommendation = 'Safe to Sign, but Review Carefully',
-  recommendationReason = 'The document is authentic, but several clauses contain moderate legal risks. Review the highlighted clauses before signing.',
+  trustScore = 70,
+  scamProbability = 20,
+  overallRisk = 'Low',
+  recommendation = '',
+  recommendationReason = '',
   recommendationExplanation = '',
 }) {
-  const { title, theme } = getTheme(recommendation);
+  const { title, theme } = getTheme(recommendation, overallRisk);
   const confidence = computeConfidence(trustScore, scamProbability);
 
   return (
@@ -125,7 +129,7 @@ export default function AIRecommendationCard({
             </div>
             <div>
               <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">
-                {title || 'Safe to Sign, but Review Carefully'}
+                {title}
               </h3>
               <p className="text-xs text-slate-500 font-semibold mt-1">
                 Overall Risk Level:{' '}
@@ -138,20 +142,16 @@ export default function AIRecommendationCard({
 
           {/* Description */}
           <p className="text-xs text-slate-600 font-medium max-w-2xl leading-relaxed py-1">
-            {recommendationReason || 'The document is authentic, but several clauses contain moderate legal risks. Review the highlighted clauses before signing.'}
+            {recommendationReason || 'The contract analysis is complete. Review highlighted findings before proceeding.'}
           </p>
 
           {/* Reasoning Score Explanation */}
           <div className="pt-3 border-t border-slate-200/50 flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-500 font-medium px-1">
             <span>Authenticity Score: <span className="font-extrabold text-slate-800">{trustScore}/100</span></span>
             <span className="text-slate-300">•</span>
-            <span>Legal Risk Score: <span className="font-extrabold text-slate-800">0/100</span></span>
+            <span>Scam Probability: <span className="font-extrabold text-slate-800">{scamProbability}%</span></span>
             <span className="text-slate-300">•</span>
-            <span>High Risk Clauses: <span className="font-extrabold text-slate-800">0</span></span>
-            <span className="text-slate-300">•</span>
-            <span>Fraud Detection: <span className="font-extrabold text-slate-800">None</span></span>
-            <span className="text-slate-300">•</span>
-            <span>Company Verified: <span className="font-extrabold text-slate-800">Yes</span></span>
+            <span>Overall Risk: <span className="font-extrabold text-slate-800">{(overallRisk || 'Low').toUpperCase()}</span></span>
           </div>
 
           {/* Confidence indicator */}
@@ -170,7 +170,7 @@ export default function AIRecommendationCard({
                 />
               </div>
               <span className={`text-xs font-extrabold ${theme.accent}`}>
-                90%
+                {confidence}%
               </span>
             </div>
           </div>
