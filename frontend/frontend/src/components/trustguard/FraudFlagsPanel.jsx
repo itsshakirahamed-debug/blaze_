@@ -26,16 +26,23 @@ export function FraudFlagsCard({ fraudFlags = [] }) {
 }
 
 export function ClauseChecklistCard({ missingClauses = [] }) {
-  const allMandatory = [
-    { name: "Payment", status: "OK" },
-    { name: "Liability", status: "OK" },
-    { name: "Governing Law", status: "OK" },
-    { name: "Force Majeure", status: "MISSING" },
-    { name: "Termination", status: "OK" },
-    { name: "Confidentiality", status: "MISSING" },
-    { name: "Dispute Resolution", status: "MISSING" },
-    { name: "Intellectual Property", status: "OK" }
+  const mandatoryClauseList = [
+    "Payment",
+    "Termination",
+    "Liability",
+    "Confidentiality",
+    "Governing Law",
+    "Dispute Resolution",
+    "Force Majeure",
+    "Intellectual Property"
   ];
+
+  const isMissing = (clauseName) => {
+    if (!missingClauses || missingClauses.length === 0) return false;
+    const lowerMissing = missingClauses.map(c => String(c).toLowerCase());
+    const lowerName = clauseName.toLowerCase();
+    return lowerMissing.some(m => m.includes(lowerName) || lowerName.includes(m));
+  };
 
   return (
     <div className="bg-white p-7 sm:p-8 rounded-lg border border-slate-200/70 shadow-xs flex flex-col justify-between h-full space-y-4">
@@ -44,15 +51,15 @@ export function ClauseChecklistCard({ missingClauses = [] }) {
           <span className="text-indigo-500">📑</span> Clause Checklist
         </h3>
         <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-xs font-bold text-slate-700 px-1">
-          {allMandatory.map((item, idx) => {
-            const isMissing = item.status === "MISSING" || missingClauses.includes(item.name);
+          {mandatoryClauseList.map((clauseName, idx) => {
+            const missing = isMissing(clauseName);
             return (
               <div key={idx} className="flex items-center justify-between py-1 px-1">
-                <span className="text-slate-800">{item.name}</span>
+                <span className="text-slate-800">{clauseName}</span>
                 <span className={`text-[10px] font-extrabold uppercase tracking-wider ${
-                  isMissing ? 'text-amber-600' : 'text-emerald-600'
+                  missing ? 'text-amber-600' : 'text-emerald-600'
                 }`}>
-                  {isMissing ? 'MISSING' : 'OK'}
+                  {missing ? 'MISSING' : 'OK'}
                 </span>
               </div>
             );

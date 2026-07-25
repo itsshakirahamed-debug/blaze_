@@ -203,6 +203,7 @@ async def analyze_contract(
         metadata_health=trustguard_data["metadata_health"],
         signature_status=trustguard_data["signature_status"],
         high_risk_count=high_risk_count,
+        missing_clauses_count=len(trustguard_data["missing_clauses"]),
     )
 
     # ── 8. AI Summary & Negotiation (called in balanced/deep modes) ───────────

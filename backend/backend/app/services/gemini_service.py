@@ -83,16 +83,8 @@ Keep it under 100 words. No bullet points. Plain paragraph only.
 
 
 # ---------------------------------------------------------------------------
-# 2. AI Recommendation Engine
+# 2. AI Recommendation Engine (Rigorously Aligned with Trust & Legal Risk)
 # ---------------------------------------------------------------------------
-
-RECOMMENDATION_LEVELS = {
-    "safe":      "🟢 Safe to Sign",
-    "review":    "🟡 Review with Legal Team",
-    "negotiate": "🟠 Negotiate Before Signing",
-    "danger":    "🔴 Do Not Sign",
-}
-
 
 def generate_final_recommendation(
     trust_score: int,
@@ -103,46 +95,49 @@ def generate_final_recommendation(
     metadata_health: int,
     signature_status: str,
     high_risk_count: int,
+    missing_clauses_count: int = 0,
 ) -> Dict[str, str]:
     """
     Centralized recommendation engine that computes the final contract signing verdict
     based on a combined weighted assessment of authenticity and legal risks.
     """
-    # 1. Define Trust & Risk States
-    is_high_trust = trust_score >= 70
-    
-    is_low_risk = overall_score < 40
-    is_med_risk = 40 <= overall_score < 70
-    is_high_risk = overall_score >= 70
-    
-    # 2. Select Case Verdict (rules matching case 1 to 5)
-    if is_high_trust:
-        if is_low_risk:
-            verdict = "✅ Safe to Sign"
-            message = "This contract appears authentic and contains minimal legal risks. It is generally safe to proceed, though reviewing important clauses is still recommended."
-        elif is_med_risk:
-            verdict = "⚠️ Safe to Sign, but Review Carefully"
-            message = "The document is authentic, but several clauses contain moderate legal risks. Review the highlighted clauses before signing."
-        else: # is_high_risk
-            verdict = "⚠️ Authentic Document, but Legally Risky"
-            message = "The document appears genuine, however multiple high-risk clauses were detected. Legal review is recommended before signing."
-    else: # is_low_trust
-        if is_high_risk:
-            verdict = "❌ Do Not Sign"
-            message = "This document shows both authenticity concerns and significant legal risks. Signing is not recommended until further verification."
-        else: # low or med risk
-            verdict = "⚠️ Verify Authenticity First"
-            message = "The legal content appears acceptable, but the authenticity of the document could not be fully verified."
+    # 1. Determine Verdict Level strictly from genuine indicators
+    is_danger = (
+        scam_probability >= 50 or
+        trust_score < 50 or
+        high_risk_count >= 2 or
+        len(fraud_flags) >= 2 or
+        overall_score >= 70
+    )
 
-    # 3. Risk Score Explanation Reason
+    is_warning = (
+        scam_probability >= 25 or
+        trust_score < 75 or
+        not company_verified or
+        missing_clauses_count >= 2 or
+        high_risk_count >= 1 or
+        overall_score >= 35 or
+        len(fraud_flags) >= 1
+    )
+
+    if is_danger:
+        verdict = "❌ Do Not Sign Without Legal Review"
+        message = "High risk detected. This document shows significant authenticity concerns or predatory legal terms. Signing is strongly discouraged without legal counsel."
+    elif is_warning:
+        verdict = "⚠️ Review Carefully Before Signing"
+        message = "Moderate risk detected. The contract has missing standard clauses, unverified party details, or clauses that require legal review."
+    else:
+        verdict = "✅ Safe to Sign"
+        message = "The contract appears authentic with standard, balanced legal provisions and verified counterparty details."
+
+    # Clean the emoji out for the explanation text
+    clean_verdict = verdict.replace("✅ ", "").replace("⚠️ ", "").replace("❌ ", "")
     fraud_label = ", ".join(fraud_flags) if fraud_flags else "None"
     comp_label = "Yes" if company_verified else "No"
     
-    # Clean the emoji out for the explanation text
-    clean_verdict = verdict.replace("✅ ", "").replace("⚠️ ", "").replace("❌ ", "")
-    
     reason = (
         f"Authenticity Score: {trust_score}/100 | "
+        f"Scam Probability: {scam_probability}% | "
         f"Legal Risk Score: {round(overall_score)}/100 | "
         f"High Risk Clauses: {high_risk_count} | "
         f"Fraud Detection: {fraud_label} | "
@@ -169,11 +164,8 @@ def generate_negotiation_suggestions(
       - original_text: the clause as-is
       - suggested_text: a safer rewritten version
       - explanation: why the original is risky and what the suggestion achieves
-
-    Only processes up to 5 high-risk clauses to manage API quota.
     """
     suggestions = []
-    # Limit to top 5 high-risk clauses to manage Gemini quota
     clauses_to_process = [c for c in high_risk_clauses if c.get("risk_level") == "High"][:5]
 
     for clause in clauses_to_process:
