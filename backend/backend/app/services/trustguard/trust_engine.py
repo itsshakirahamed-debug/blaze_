@@ -63,8 +63,8 @@ def calculate_trust_and_scam_metrics(file_path: str, document_text: str, clauses
     layout_res = analyze_layout_manipulation(file_path)
     layout_score = layout_res["layout_health_score"]
     
-    # Compute Weighted Trust Score
-    trust_score = round(
+    # Base Weighted Trust Score
+    raw_trust = (
         (meta_score * 0.10) +
         (dup_score * 0.15) +
         (sig_score * 0.15) +
@@ -74,14 +74,23 @@ def calculate_trust_and_scam_metrics(file_path: str, document_text: str, clauses
         (cons_score * 0.10) +
         (fraud_score * 0.10) +
         (temp_score * 0.05) +
-        (layout_score * 0.10),
-        1
+        (layout_score * 0.10)
     )
-    
-    trust_score = max(0.0, min(100.0, trust_score))
+
+    # Apply severe risk deductions to Trust Score
+    if fraud_res["has_high_fraud_risk"]:
+        raw_trust -= 25.0
+    if not comp_res["company_verified"]:
+        raw_trust -= 15.0
+    if cons_res["has_contradictions"]:
+        raw_trust -= 15.0
+    if missing_score < 50:
+        raw_trust -= 15.0
+        
+    trust_score = round(max(5.0, min(100.0, raw_trust)), 1)
     
     # Calculate Scam Probability dynamically from genuine risk indicators
-    base_scam = (100 - trust_score) * 0.80
+    base_scam = (100 - trust_score) * 0.85
     if fraud_res["has_high_fraud_risk"]:
         base_scam += 25
     if not comp_res["company_verified"]:
