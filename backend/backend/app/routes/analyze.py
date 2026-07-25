@@ -133,13 +133,10 @@ async def analyze_contract(
         f.write(await file.read())
 
     # ── 2. Extract & clean text ───────────────────────────────────────────────
-    ext = file.filename.lower()
-    if ext.endswith(".pdf"):
-        text = extract_pdf_text(file_path)
-    elif ext.endswith(".docx"):
-        text = extract_docx_text(file_path)
-    else:
-        return {"error": "Only PDF and DOCX files are supported."}
+    if not file.filename.lower().endswith(".pdf"):
+        return {"error": "Only PDF files are supported."}
+
+    text = extract_pdf_text(file_path)
 
     text = clean_text(text)
 

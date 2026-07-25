@@ -61,7 +61,7 @@ def calculate_trust_and_scam_metrics(file_path: str, document_text: str, clauses
     
     # 10. Layout Analysis (10%)
     layout_res = analyze_layout_manipulation(file_path)
-    layout_score = layout_res["layout_health_score"]
+    layout_score = layout_res.get("layout_health_score", layout_res.get("score", 100))
     
     # Base Weighted Trust Score
     raw_trust = (

@@ -30,9 +30,9 @@ const MODE_STEPS = {
 };
 
 const MODE_LABELS = {
-  fast:     '⚡ Fast Mode',
+  fast: '⚡ Fast Mode',
   balanced: '⚖️ Balanced',
-  deep:     '🔬 Deep Analysis',
+  deep: '🔬 Deep Analysis',
 };
 
 export default function Upload() {
@@ -54,33 +54,18 @@ export default function Upload() {
       formData.append('file', file);
       formData.append('mode', selectedMode);
 
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
-      let response;
-
-      try {
-        response = await fetch(`${baseUrl}/analyze`, {
-          method: 'POST',
-          body: formData,
-        });
-      } catch (err) {
-        response = await fetch('http://localhost:8000/analyze', {
-          method: 'POST',
-          body: formData,
-        });
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Analysis failed (${response.status}): ${errorText || 'Server Error'}`);
-      }
+      const response = await fetch('http://127.0.0.1:8000/analyze', {
+        method: 'POST',
+        body: formData,
+      });
 
       const result = await response.json();
       result._mode = selectedMode;
       localStorage.setItem('analysisResult', JSON.stringify(result));
       navigate('/results');
     } catch (error) {
-      console.error('ERROR during analysis:', error);
-      alert(`Backend Analysis Error: ${error.message || 'Unable to connect to analysis server. Ensure backend API is running on port 8000.'}`);
+      console.error('ERROR:', error);
+      alert(error.message);
     } finally {
       setIsAnalyzing(false);
     }

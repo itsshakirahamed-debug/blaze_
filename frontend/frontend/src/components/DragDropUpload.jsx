@@ -8,16 +8,7 @@ export default function DragDropUpload({ onFileSelect }) {
   const fileInputRef = useRef(null);
 
   const isValidFile = (file) => {
-    if (!file) return false;
-    const fileName = file.name ? file.name.toLowerCase() : "";
-    const isExtensionValid = fileName.endsWith(".pdf") || fileName.endsWith(".docx");
-    const validTypes = [
-      "application/pdf",
-      "application/x-pdf",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/msword",
-    ];
-    return isExtensionValid || validTypes.includes(file.type);
+    return file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
   };
 
   const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
@@ -31,7 +22,7 @@ export default function DragDropUpload({ onFileSelect }) {
       setFile(droppedFile);
       onFileSelect(droppedFile);
     } else {
-      alert("Please upload a valid PDF or DOCX contract file.");
+      alert("Please upload a PDF document.");
     }
   };
 
@@ -41,7 +32,7 @@ export default function DragDropUpload({ onFileSelect }) {
       setFile(selectedFile);
       onFileSelect(selectedFile);
     } else if (selectedFile) {
-      alert("Please upload a valid PDF or DOCX contract file.");
+      alert("Please upload a PDF document.");
     }
   };
 
@@ -100,22 +91,22 @@ export default function DragDropUpload({ onFileSelect }) {
           {/* Text */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>
-              Upload Your Contract
+              Upload Your PDF Contract
             </h3>
             <p style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>
-              Drag & drop your file here, or{' '}
+              Drag & drop your PDF file here, or{' '}
               <span style={{ color: '#5B5FFF', fontWeight: 700 }}>browse files</span>
             </p>
           </div>
 
           <p style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>
-            Supported formats: PDF, DOCX · Max 10 MB
+            Supported format: PDF (.pdf) · Max 10 MB
           </p>
 
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            accept=".pdf,application/pdf"
             onChange={handleFileInput}
             className="hidden"
           />

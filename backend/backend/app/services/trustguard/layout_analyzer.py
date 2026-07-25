@@ -8,7 +8,7 @@ def analyze_layout_manipulation(file_path: str) -> Dict[str, Any]:
     if not file_path.lower().endswith(".pdf"):
         return {
             "layout_status": "Normal",
-            "score": 100,
+            "layout_health_score": 100,
             "issues": []
         }
         
