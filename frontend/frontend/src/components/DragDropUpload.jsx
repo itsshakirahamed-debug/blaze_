@@ -8,11 +8,16 @@ export default function DragDropUpload({ onFileSelect }) {
   const fileInputRef = useRef(null);
 
   const isValidFile = (file) => {
+    if (!file) return false;
+    const fileName = file.name ? file.name.toLowerCase() : "";
+    const isExtensionValid = fileName.endsWith(".pdf") || fileName.endsWith(".docx");
     const validTypes = [
       "application/pdf",
+      "application/x-pdf",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/msword",
     ];
-    return validTypes.includes(file.type);
+    return isExtensionValid || validTypes.includes(file.type);
   };
 
   const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
@@ -26,7 +31,7 @@ export default function DragDropUpload({ onFileSelect }) {
       setFile(droppedFile);
       onFileSelect(droppedFile);
     } else {
-      alert("Please upload a PDF or DOCX file.");
+      alert("Please upload a valid PDF or DOCX contract file.");
     }
   };
 
@@ -36,7 +41,7 @@ export default function DragDropUpload({ onFileSelect }) {
       setFile(selectedFile);
       onFileSelect(selectedFile);
     } else if (selectedFile) {
-      alert("Please upload a PDF or DOCX file.");
+      alert("Please upload a valid PDF or DOCX contract file.");
     }
   };
 
